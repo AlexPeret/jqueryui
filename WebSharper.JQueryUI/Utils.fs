@@ -19,20 +19,22 @@
 // $end{copyright}
 
 namespace WebSharper.JQueryUI
+
 open WebSharper
-open WebSharper.Html.Client
+open WebSharper.UI
 
 [<JavaScript>]
 module Utils =
-
     type Pagelet() =
-        inherit Html.Client.Pagelet()
 
         [<DefaultValue>]
-        val mutable internal element : Element
+        val mutable element : Elt
 
-        override this.Render() =
-            this.element.Render()
+        [<JavaScript>]
+        member this.AsDoc() : Doc =
+            this.element :> Doc
 
-        override this.Body
-            with get() = this.element.Body
+
+    [<JavaScript>]
+    [<Inline "'id' + Math.round(Math.random() * 1E8)">]
+    let NewId () = ""

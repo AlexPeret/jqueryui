@@ -23,7 +23,8 @@ namespace WebSharper.JQueryUI
 
 open WebSharper
 open WebSharper.JavaScript
-open WebSharper.Html.Client
+open WebSharper.UI
+open WebSharper.UI.Html
 
 type ProgressbarConfiguration[<JavaScript>]() =
 
@@ -57,20 +58,19 @@ type Progressbar[<JavaScript>]internal () =
     /// configuration object.
     [<JavaScript>]
     [<Name "New1">]
-    static member New (el: Element, conf: ProgressbarConfiguration) =
+    static member New (el: Doc, conf: ProgressbarConfiguration) =
         let pb = new Progressbar()
-        pb.element <- el
-        el
-        |> OnAfterRender (fun el  ->
-            ProgressbarInternal.Init(el.Dom, conf)
-        )
+        pb.element <-
+            (el :?> Elt).OnAfterRender (fun el  ->
+                ProgressbarInternal.Init(el, conf)
+            )
         pb
 
     /// Creates a new progressbar given an element using
     /// the default configuration.
     [<JavaScript>]
     [<Name "New2">]
-    static member New (el: Element) =
+    static member New (el: Doc) =
         Progressbar.New(el, new ProgressbarConfiguration())
 
 
@@ -79,39 +79,39 @@ type Progressbar[<JavaScript>]internal () =
     [<JavaScript>]
     [<Name "New3">]
     static member New ( conf: ProgressbarConfiguration) =
-        Progressbar.New(Div [], conf)
+        Progressbar.New(div [] [] :?> Elt, conf)
 
     /// Creates a new progressbar based on an empty Div element
     /// and the default configuration.
     [<JavaScript>]
     [<Name "New4">]
     static member New () =
-        Progressbar.New(Div [], new ProgressbarConfiguration())
+        Progressbar.New(div [] [] :?> Elt, new ProgressbarConfiguration())
 
     (****************************************************************
     * Methods
     *****************************************************************)
     /// Removes the progressbar functionality completely.
-    [<Inline "jQuery($this.element.Dom).progressbar('destroy')">]
+    [<Inline "jQuery($this.element.elt).progressbar('destroy')">]
     member this.Destroy() = ()
 
     /// Disables the progressbar functionality.
-    [<Inline "jQuery($this.element.Dom).progressbar('disable')">]
+    [<Inline "jQuery($this.element.elt).progressbar('disable')">]
     member this.Disable () = ()
 
     /// Enables the progressbar functionality.
-    [<Inline "jQuery($this.element.Dom).progressbar('enable')">]
+    [<Inline "jQuery($this.element.elt).progressbar('enable')">]
     member this.Enable () = ()
 
     /// Sets a progressbar option.
-    [<Inline "jQuery($this.element.Dom).progressbar('option', $name, $value)">]
+    [<Inline "jQuery($this.element.elt).progressbar('option', $name, $value)">]
     member this.Option (name: string, value: obj) = ()
 
     /// Gets a progressbar option.
-    [<Inline "jQuery($this.element.Dom).progressbar('option', $name)">]
+    [<Inline "jQuery($this.element.elt).progressbar('option', $name)">]
     member this.Option (name: string) = X<obj>
 
-    [<Inline "jQuery($this.element.Dom).progressbar('widget')">]
+    [<Inline "jQuery($this.element.elt).progressbar('widget')">]
     member private this.getWidget () = X<Dom.Element>
 
     /// Returns the .ui-progressbar element.
@@ -119,11 +119,11 @@ type Progressbar[<JavaScript>]internal () =
     member this.Widget = this.getWidget()
 
     /// Sets the value of the progressbar.
-    [<Inline "jQuery($this.element.Dom).progressbar('value', $v)">]
+    [<Inline "jQuery($this.element.elt).progressbar('value', $v)">]
     member private this.setValue (v: int) = ()
 
     /// Gets the value of the progressbar.
-    [<Inline "jQuery($this.element.Dom).progressbar('value')">]
+    [<Inline "jQuery($this.element.elt).progressbar('value')">]
     member private this.getValue () = 0
 
     /// Gets or sets the value of the progressbar.
@@ -137,32 +137,36 @@ type Progressbar[<JavaScript>]internal () =
     (****************************************************************
     * Events
     *****************************************************************)
-    [<Inline "jQuery($this.element.Dom).bind('progressbarcreate', function (x,y) {$f(x);})">]
+    [<Inline "jQuery($this.element.elt).bind('progressbarcreate', function (x,y) {$f(x);})">]
     member private this.onCreate(f : JQuery.Event -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).bind('progressbarchange', function (x,y) {$f(x);})">]
+    [<Inline "jQuery($this.element.elt).bind('progressbarchange', function (x,y) {$f(x);})">]
     member private this.onChange(f : JQuery.Event -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).bind('progressbarcomplete', function (x,y) {$f(x);})">]
+    [<Inline "jQuery($this.element.elt).bind('progressbarcomplete', function (x,y) {$f(x);})">]
     member private this.onComplete(f : JQuery.Event -> unit) = ()
 
     /// Event triggered when the progressbar is created.
     [<JavaScript>]
     member this.OnCreate(f : JQuery.Event -> unit) =
-        this |> OnAfterRender(fun _ ->
+        this.element.OnAfterRender(fun _ ->
             this.onCreate f
         )
+        |> ignore
 
     /// Event triggered when the value of the progressbar changes.
     [<JavaScript>]
     member this.OnChange(f : JQuery.Event -> unit) =
-        this |> OnAfterRender(fun _ ->
+        this.element.OnAfterRender(fun _ ->
             this.onChange f
         )
+        |> ignore
 
     /// This event is triggered when the value of the progressbar reaches the maximum value of 100.
     [<JavaScript>]
     member this.OnComplete(f : JQuery.Event -> unit) =
-        this |> OnAfterRender(fun _ ->
+        this.element.OnAfterRender(fun _ ->
             this.onComplete f
         )
+        |> ignore
+

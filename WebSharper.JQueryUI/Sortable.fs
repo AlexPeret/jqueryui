@@ -23,7 +23,7 @@ namespace WebSharper.JQueryUI
 
 open WebSharper
 open WebSharper.JavaScript
-open WebSharper.Html.Client
+open WebSharper.UI
 
 type AxisConfiguration =
     | [<Name "X">] X
@@ -207,12 +207,11 @@ type Sortable [<JavaScript>] internal () =
     /// configuration object.
     [<JavaScript>]
     [<Name "New1">]
-    static member New (el: Element, conf: SortableConfiguration) : Sortable =
+    static member New (el: Doc, conf: SortableConfiguration) : Sortable =
         let s = new Sortable()
         s.element <-
-            el
-            |>! OnAfterRender (fun el  ->
-                SortableInternal.Init(el.Dom, conf)
+            (el :?> Elt).OnAfterRender (fun el  ->
+                SortableInternal.Init(el, conf)
             )
         s
 
@@ -220,7 +219,7 @@ type Sortable [<JavaScript>] internal () =
     /// the default configuration settings.
     [<JavaScript>]
     [<Name "New2">]
-    static member New (el: Element) : Sortable =
+    static member New (el: Doc) : Sortable =
         let conf = new SortableConfiguration()
         Sortable.New(el, conf)
 
@@ -248,11 +247,11 @@ type Sortable [<JavaScript>] internal () =
     member this.Option(optionName: string) = box()
 
     /// Gets all options.
-    [<Inline "jQuery($this.element.Dom).sortable('option')">]
+    [<Inline "jQuery($this.element.elt).sortable('option')">]
     member this.Option () = Unchecked.defaultof<SortableConfiguration>
 
     /// Sets one or more options.
-    [<Inline "jQuery($this.element.Dom).sortable('option', $options)">]
+    [<Inline "jQuery($this.element.elt).sortable('option', $options)">]
     member this.Option (options: SortableConfiguration) = Unchecked.defaultof<unit>
 
     [<Inline "$this.sortable('widget')">]
@@ -289,106 +288,107 @@ type Sortable [<JavaScript>] internal () =
     (****************************************************************
     * Events
     *****************************************************************)
-    [<Inline "jQuery($this.element.Dom).bind('sortcreate', function (x,y) {($f(x))(y);})">]
+    [<Inline "jQuery($this.element.elt).bind('sortcreate', function (x,y) {($f(x))(y);})">]
     member private this.onCreate(f : JQuery.Event -> SortableEvent -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).bind('sortstart', function (x,y) {($f(x))(y);})">]
+    [<Inline "jQuery($this.element.elt).bind('sortstart', function (x,y) {($f(x))(y);})">]
     member private this.onStart(f : JQuery.Event -> SortableEvent -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).bind('sort', function (x,y) {($f(x))(y);})">]
+    [<Inline "jQuery($this.element.elt).bind('sort', function (x,y) {($f(x))(y);})">]
     member private this.onSort(f : JQuery.Event -> SortableEvent -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).bind('sortchange', function (x,y) {($f(x))(y);})">]
+    [<Inline "jQuery($this.element.elt).bind('sortchange', function (x,y) {($f(x))(y);})">]
     member private this.onChange(f : JQuery.Event -> SortableEvent -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).bind('sortbeforestop', function (x,y) {($f(x))(y);})">]
+    [<Inline "jQuery($this.element.elt).bind('sortbeforestop', function (x,y) {($f(x))(y);})">]
     member private this.onBeforeStop(f : JQuery.Event -> SortableEvent -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).bind('sortstop', function (event,ui) {($f(event))(ui);})">]
+    [<Inline "jQuery($this.element.elt).bind('sortstop', function (event,ui) {($f(event))(ui);})">]
     member private this.onStop(f : JQuery.Event -> SortableEvent -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).bind('sortupdate', function (x,y) {($f(x))(y);})">]
+    [<Inline "jQuery($this.element.elt).bind('sortupdate', function (x,y) {($f(x))(y);})">]
     member private this.onUpdate(f : JQuery.Event -> SortableEvent -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).bind('sortreceive', function (x,y) {($f(x))(y);})">]
+    [<Inline "jQuery($this.element.elt).bind('sortreceive', function (x,y) {($f(x))(y);})">]
     member private this.onReceive(f : JQuery.Event -> SortableEvent -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).bind('sortremove', function (x,y) {($f(x))(y);})">]
+    [<Inline "jQuery($this.element.elt).bind('sortremove', function (x,y) {($f(x))(y);})">]
     member private this.onRemove(f : JQuery.Event -> SortableEvent -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).bind('sortover', function (x,y) {($f(x))(y);})">]
+    [<Inline "jQuery($this.element.elt).bind('sortover', function (x,y) {($f(x))(y);})">]
     member private this.onOver(f : JQuery.Event -> SortableEvent -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).bind('sortout', function (x,y) {($f(x))(y);})">]
+    [<Inline "jQuery($this.element.elt).bind('sortout', function (x,y) {($f(x))(y);})">]
     member private this.onOut(f : JQuery.Event -> SortableEvent -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).bind('sortactivate', function (x,y) {($f(x))(y);})">]
+    [<Inline "jQuery($this.element.elt).bind('sortactivate', function (x,y) {($f(x))(y);})">]
     member private this.onActivate(f : JQuery.Event -> SortableEvent -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).bind('sortdeactivate', function (x,y) {($f(x))(y);})">]
+    [<Inline "jQuery($this.element.elt).bind('sortdeactivate', function (x,y) {($f(x))(y);})">]
     member private this.onDeactivate(f : JQuery.Event -> SortableEvent -> unit) = ()
 
     /// Event triggered triggered when sortable is created.
     [<JavaScript>]
     member this.OnCreate f =
-        this |> OnAfterRender(fun _ ->  this.onCreate f)
+        this.element.OnAfterRender(fun _ ->  this.onCreate f) |> ignore
 
     /// Event triggered triggered when sorting starts.
     [<JavaScript>]
     member this.OnStart f =
-        this |> OnAfterRender(fun _ ->  this.onStart f)
+        this.element.OnAfterRender(fun _ ->  this.onStart f) |> ignore
 
     /// Event triggered during sorting.
     [<JavaScript>]
     member this.OnSort f =
-        this |> OnAfterRender(fun _ -> this.onSort f)
+        this.element.OnAfterRender(fun _ -> this.onSort f) |> ignore
 
     /// Event triggered during sorting, but only when the DOM position has changed.
     [<JavaScript>]
     member this.OnChange f =
-        this |> OnAfterRender(fun _ -> this.onChange f)
+        this.element.OnAfterRender(fun _ -> this.onChange f) |> ignore
 
     /// Event triggered when sorting stops, but when the placeholder/helper is still available.
     [<JavaScript>]
     member this.OnBeforeStop f =
-        this |> OnAfterRender(fun _ -> this.onBeforeStop f)
+        this.element.OnAfterRender(fun _ -> this.onBeforeStop f) |> ignore
 
     /// Event triggered when sorting has stopped.
     [<JavaScript>]
     member this.OnStop f =
-        this |> OnAfterRender(fun _ -> this.onStop f)
+        this.element.OnAfterRender(fun _ -> this.onStop f) |> ignore
 
     /// Event triggered when the user stopped sorting and the DOM position has changed.
     [<JavaScript>]
     member this.OnUpdate f =
-        this |> OnAfterRender(fun _ -> this.onUpdate f)
+        this.element.OnAfterRender(fun _ -> this.onUpdate f) |> ignore
 
     /// Event triggered when a connected sortable list has received an item from another list.
     [<JavaScript>]
     member this.OnReceive f =
-        this |> OnAfterRender(fun _ -> this.onReceive f)
+        this.element.OnAfterRender(fun _ -> this.onReceive f) |> ignore
 
     /// Event triggered when a sortable item has been dragged out from the list and into another.
     [<JavaScript>]
     member this.OnRemove f =
-        this |> OnAfterRender(fun _ -> this.onRemove f)
+        this.element.OnAfterRender(fun _ -> this.onRemove f) |> ignore
 
     /// Event triggered when a sortable item is moved into a connected list.
     [<JavaScript>]
     member this.OnOver f =
-        this |> OnAfterRender(fun _ -> this.onOver f)
+        this.element.OnAfterRender(fun _ -> this.onOver f) |> ignore
 
     /// Event triggered when a sortable item is moved away from a connected list.
     [<JavaScript>]
     member this.OnOut f =
-        this |> OnAfterRender(fun _ -> this.onOut f)
+        this.element.OnAfterRender(fun _ -> this.onOut f) |> ignore
 
     /// Event triggered when using connected lists, every connected list on drag start receives it.
     [<JavaScript>]
     member this.OnActivate f =
-        this |> OnAfterRender(fun _ -> this.onActivate f)
+        this.element.OnAfterRender(fun _ -> this.onActivate f) |> ignore
 
     // Event triggered when sorting was stopped, is propagated to all possible connected lists.
     [<JavaScript>]
     member this.OnDeactivate f =
-        this |> OnAfterRender(fun _ -> this.onDeactivate f)
+        this.element.OnAfterRender(fun _ -> this.onDeactivate f) |> ignore
+

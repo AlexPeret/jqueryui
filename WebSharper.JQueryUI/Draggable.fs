@@ -23,7 +23,7 @@ namespace WebSharper.JQueryUI
 
 open WebSharper
 open WebSharper.JavaScript
-open WebSharper.Html.Client
+open WebSharper.UI
 
 
 type DraggablecursorAtConfiguration =
@@ -226,12 +226,11 @@ type Draggable[<JavaScript>] internal () =
     /// configuration settings object.
     [<JavaScript>]
     [<Name "New1">]
-    static member New (el : Element, conf: DraggableConfiguration): Draggable =
+    static member New (el : Doc, conf: DraggableConfiguration): Draggable =
         let a = new Draggable()
         a.element <-
-            el
-            |>! OnAfterRender (fun el ->
-                DraggableInternal.New(el.Dom, conf)
+            (el :?> Elt).OnAfterRender (fun el ->
+                DraggableInternal.New(el, conf)
             )
         a
 
@@ -239,7 +238,7 @@ type Draggable[<JavaScript>] internal () =
     /// configuration settings.
     [<JavaScript>]
     [<Name "New2">]
-    static member New (el : Element) : Draggable =
+    static member New (el : Doc) : Draggable =
         let conf = new DraggableConfiguration()
         Draggable.New(el, conf)
 
@@ -247,34 +246,34 @@ type Draggable[<JavaScript>] internal () =
     * Methods
     *****************************************************************)
     /// Removes draggable functionality completely.
-    [<Inline "jQuery($this.element.Dom).draggable('destroy')">]
+    [<Inline "jQuery($this.element.elt).draggable('destroy')">]
     member this.Destroy() = X<unit>
 
     /// Disables the draggable functionality.
-    [<Inline "jQuery($this.element.Dom).draggable('disable')">]
+    [<Inline "jQuery($this.element.elt).draggable('disable')">]
     member this.Disable() = X<unit>
 
     /// Enables the draggable functionality.
-    [<Inline "jQuery($this.element.Dom).draggable('enable')">]
+    [<Inline "jQuery($this.element.elt).draggable('enable')">]
     member this.Enable() = X<unit>
 
     /// Sets a draggable option.
-    [<Inline "jQuery($this.element.Dom).draggable('option', $name, $value)">]
+    [<Inline "jQuery($this.element.elt).draggable('option', $name, $value)">]
     member this.Option (name: string, value: obj) = X<unit>
 
     /// Gets a draggable option.
-    [<Inline "jQuery($this.element.Dom).draggable('option', $name)">]
+    [<Inline "jQuery($this.element.elt).draggable('option', $name)">]
     member this.Option (name: string) = X<obj>
 
     /// Gets all options.
-    [<Inline "jQuery($this.element.Dom).draggable('option')">]
+    [<Inline "jQuery($this.element.elt).draggable('option')">]
     member this.Option () = X<DraggableConfiguration>
 
     /// Sets one or more options.
-    [<Inline "jQuery($this.element.Dom).draggable('option', $options)">]
+    [<Inline "jQuery($this.element.elt).draggable('option', $options)">]
     member this.Option (options: DraggableConfiguration) = X<unit>
 
-    [<Inline "jQuery($this.element.Dom).draggable('widget')">]
+    [<Inline "jQuery($this.element.elt).draggable('widget')">]
     member private this.getWidget () = X<Dom.Element>
 
     /// Returns the .ui-draggable element.
@@ -286,34 +285,34 @@ type Draggable[<JavaScript>] internal () =
     * Events
     *****************************************************************)
 
-    [<Inline "jQuery($this.element.Dom).bind('dragcreate', function (x,y) {($f(x))(y);})">]
+    [<Inline "jQuery($this.element.elt).bind('dragcreate', function (x,y) {($f(x))(y);})">]
     member private this.onCreate(f : JQuery.Event -> DraggableEvent -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).bind('dragstart', function (x,y) {($f(x))(y);})">]
+    [<Inline "jQuery($this.element.elt).bind('dragstart', function (x,y) {($f(x))(y);})">]
     member private this.onStart(f : JQuery.Event -> DraggableEvent -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).bind('dragstop', function (x,y) {($f(x))(y);})">]
+    [<Inline "jQuery($this.element.elt).bind('dragstop', function (x,y) {($f(x))(y);})">]
     member private this.onStop(f : JQuery.Event -> DraggableEvent -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).bind('drag', function (x,y) {($f(x))(y);})">]
+    [<Inline "jQuery($this.element.elt).bind('drag', function (x,y) {($f(x))(y);})">]
     member private this.onDrag(f : JQuery.Event -> DraggableEvent -> unit) = ()
 
     /// Event triggered when dragging is created.
     [<JavaScript>]
     member this.OnCreate f =
-        this |> OnAfterRender(fun _ ->  this.onCreate f)
+        this.element.OnAfterRender(fun _ ->  this.onCreate f) |> ignore
 
     /// Event triggered when dragging starts.
     [<JavaScript>]
     member this.OnStart f =
-        this |> OnAfterRender(fun _ ->  this.onStart f)
+        this.element.OnAfterRender(fun _ ->  this.onStart f) |> ignore
 
     /// Event triggered when dragging stops.
     [<JavaScript>]
     member this.OnStop f =
-        this |> OnAfterRender(fun _ -> this.onStop f)
+        this.element.OnAfterRender(fun _ -> this.onStop f) |> ignore
 
     /// Event triggered during dragging.
     [<JavaScript>]
     member this.OnDrag f =
-        this |> OnAfterRender(fun _ -> this.onDrag f)
+        this.element.OnAfterRender(fun _ -> this.onDrag f) |> ignore

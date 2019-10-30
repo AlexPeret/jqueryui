@@ -23,7 +23,8 @@ namespace WebSharper.JQueryUI
 
 open WebSharper
 open WebSharper.JavaScript
-open WebSharper.Html.Client
+open WebSharper.UI
+open WebSharper.UI.Html
 
 
 type SliderConfiguration[<JavaScript>] () =
@@ -90,10 +91,10 @@ type Slider[<JavaScript>] internal () =
     static member New (conf: SliderConfiguration): Slider =
         let s = new Slider()
         s.element <-
-            Div []
-            |>! OnAfterRender (fun el  ->
-                SliderInternal.Init(el.Dom, conf)
-            )
+            (div [] [] :?> Elt)
+                .OnAfterRender (fun el  ->
+                    SliderInternal.Init(el, conf)
+                )
         s
 
     /// Creates a new slider using the default configuration
@@ -107,42 +108,42 @@ type Slider[<JavaScript>] internal () =
     * Methods
     *****************************************************************)
     /// Removes the slider functionality completly.
-    [<Inline "jQuery($this.element.Dom).slider('destroy')">]
+    [<Inline "jQuery($this.element.elt).slider('destroy')">]
     member this.Destroy() = ()
 
     /// Disables the slider functionality.
-    [<Inline "jQuery($this.element.Dom).slider('disable')">]
+    [<Inline "jQuery($this.element.elt).slider('disable')">]
     member this.Disable () = ()
 
     /// Enables the slider functionality.
-    [<Inline "jQuery($this.element.Dom).slider('enable')">]
+    [<Inline "jQuery($this.element.elt).slider('enable')">]
     member this.Enable () = ()
 
     /// Sets a slider option.
-    [<Inline "jQuery($this.element.Dom).slider('option', $name, $value)">]
+    [<Inline "jQuery($this.element.elt).slider('option', $name, $value)">]
     member this.Option (name: string, value: obj) = ()
 
     /// Gets a slider option.
-    [<Inline "jQuery($this.element.Dom).slider('option', $name)">]
+    [<Inline "jQuery($this.element.elt).slider('option', $name)">]
     member this.Option (name: string) = X<obj>
 
-    [<Inline "jQuery($this.element.Dom).slider('widget')">]
+    [<Inline "jQuery($this.element.elt).slider('widget')">]
     member private this.getWidget () = X<Dom.Element>
 
     /// Returns the .ui-slider element.
     [<JavaScript>]
     member this.Widget = this.getWidget()
 
-    [<Inline "jQuery($this.element.Dom).slider('value', $v)">]
+    [<Inline "jQuery($this.element.elt).slider('value', $v)">]
     member private this.setValue (v: int) = ()
 
-    [<Inline "jQuery($this.element.Dom).slider('value')">]
+    [<Inline "jQuery($this.element.elt).slider('value')">]
     member private this.getValue () = 0
 
-    [<Inline "jQuery($this.element.Dom).slider('values', $v)">]
+    [<Inline "jQuery($this.element.elt).slider('values', $v)">]
     member private this.setValues (v: int []) = ()
 
-    [<Inline "jQuery($this.element.Dom).slider('values')">]
+    [<Inline "jQuery($this.element.elt).slider('values')">]
     member private this.getValues () : int [] = [||]
 
 
@@ -167,45 +168,45 @@ type Slider[<JavaScript>] internal () =
     * Events
     *****************************************************************)
 
-    [<Inline "jQuery($this.element.Dom).bind('slidecreate', function (x,y) {$f(x);})">]
+    [<Inline "jQuery($this.element.elt).bind('slidecreate', function (x,y) {$f(x);})">]
     member private this.onCreate(f : JQuery.Event -> unit) = ()
 
 
-    [<Inline "jQuery($this.element.Dom).bind('slidestart', function (x,y) {$f(x);})">]
+    [<Inline "jQuery($this.element.elt).bind('slidestart', function (x,y) {$f(x);})">]
     member private this.onStart(f : JQuery.Event -> unit) = ()
 
 
-    [<Inline "jQuery($this.element.Dom).bind('slidechange', function (x,y) {$f(x);})">]
+    [<Inline "jQuery($this.element.elt).bind('slidechange', function (x,y) {$f(x);})">]
     member private this.onChange(f : JQuery.Event -> unit) = ()
 
 
-    [<Inline "jQuery($this.element.Dom).bind('slide', function (x,y) {$f(x);})">]
+    [<Inline "jQuery($this.element.elt).bind('slide', function (x,y) {$f(x);})">]
     member private this.onSlide(f : JQuery.Event -> unit) = ()
 
 
-    [<Inline "jQuery($this.element.Dom).bind('slidestop', function (x,y) {$f(x);})">]
+    [<Inline "jQuery($this.element.elt).bind('slidestop', function (x,y) {$f(x);})">]
     member private this.onStop(f : JQuery.Event -> unit) = ()
 
 
     /// Event triggered when the user starts sliding.
     [<JavaScript>]
     member this.OnStart(f : JQuery.Event -> unit) =
-        this |> OnAfterRender (fun _ -> this.onStart f)
+        this.element.OnAfterRender (fun _ -> this.onStart f) |> ignore
 
     /// Event triggered when the slider changes.
     [<JavaScript>]
     member this.OnChange(f : JQuery.Event -> unit) =
-        this |> OnAfterRender (fun _ -> this.onChange f)
+        this.element.OnAfterRender (fun _ -> this.onChange f) |> ignore
 
     /// Event triggered on every mouse move during slide.
     [<JavaScript>]
     member this.OnSlide(f : JQuery.Event -> unit) =
-        this |> OnAfterRender (fun _ -> this.onSlide f)
+        this.element.OnAfterRender (fun _ -> this.onSlide f) |> ignore
 
     /// Event triggered when the user stops sliding.
     [<JavaScript>]
     member this.OnStop(f : JQuery.Event -> unit) =
-        this |> OnAfterRender (fun _ -> this.onStop f)
+        this.element.OnAfterRender (fun _ -> this.onStop f) |> ignore
 
 
 

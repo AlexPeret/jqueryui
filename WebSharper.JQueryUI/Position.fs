@@ -23,7 +23,7 @@ namespace WebSharper.JQueryUI
 
 open WebSharper
 open WebSharper.JavaScript
-open WebSharper.Html.Client
+open WebSharper.UI
 
 //
 //module Position =
@@ -117,19 +117,18 @@ type Position [<JavaScript>] internal () =
     /// configuration object.
     [<JavaScript>]
     [<Name "New1">]
-    static member New (el : Element, conf: PositionConfiguration): Position =
-        let a = new Position()
-        a.element <-
-            el
-            |>! OnAfterRender (fun el  ->
-                PositionInternal.New(el.Dom, conf)
-            )
-        a
+    static member New (el : Doc, conf: PositionConfiguration): Position =
+        let pos = new Position()
+        pos.element <-
+            ((el :?> Elt).OnAfterRender (fun el  ->
+                PositionInternal.New(el, conf)
+            ))
+        pos
 
     /// Creates a new position object given an element
     /// using the default configuration.
     [<JavaScript>]
     [<Name "New2">]
-    static member New (el : Element) : Position =
+    static member New (el : Doc) : Position =
         let conf = new PositionConfiguration()
         Position.New(el, conf)

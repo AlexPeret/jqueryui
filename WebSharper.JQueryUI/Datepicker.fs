@@ -23,7 +23,9 @@ namespace WebSharper.JQueryUI
 
 open WebSharper
 open WebSharper.JavaScript
-open WebSharper.Html.Client
+open WebSharper.UI
+open WebSharper.UI.Html
+open WebSharper.UI.Client
 
 type DatepickerShowOptionsConfiguration =
     {
@@ -291,20 +293,18 @@ and
     [<JavaScript>]
     /// Creates a new datepicker given an element and a configuration object.
     [<Name "New1">]
-    static member New (el: Element, conf: DatepickerConfiguration): Datepicker =
+    static member New (el: Doc, conf: DatepickerConfiguration): Datepicker =
         let dp = new Datepicker()
-        dp.element <- el
-        el
-        |> OnAfterRender (fun el  ->
-            DatepickerInternal.Init(el.Dom, conf))
-        |> ignore
+        dp.element <-
+            (el :?> Elt).OnAfterRender (fun el  ->
+                DatepickerInternal.Init(el, conf))
         dp
 
     /// Creates a new datepicker given an element, using the default
     /// configuration.
     [<JavaScript>]
     [<Name "New2">]
-    static member New (el:Element): Datepicker =
+    static member New (el:Doc): Datepicker =
         Datepicker.New(el, new DatepickerConfiguration())
 
     /// Creates a new datepicker using an empty Div element and
@@ -312,7 +312,7 @@ and
     [<JavaScript>]
     [<Name "New3">]
     static member New (conf: DatepickerConfiguration): Datepicker =
-        Datepicker.New(Div [], conf)
+        Datepicker.New(div [] [] :?> Elt, conf)
 
     /// Creates a new datepicker using an empty Div element and
     /// the default configuration.
@@ -321,41 +321,41 @@ and
     static member New (): Datepicker =
         //WARNING! Datepicker behaves on a different fashion when 
         //attached to a div, compared to an input (i.e. hide/show methods)
-        Datepicker.New(Div [], new DatepickerConfiguration())
+        Datepicker.New(div [] [] :?> Elt, new DatepickerConfiguration())
 
 
     (****************************************************************
     * Methods
     *****************************************************************)
     /// Destroys the datepicker functionality.
-    [<Inline "jQuery($this.element.Dom).datepicker('destroy')">]
+    [<Inline "jQuery($this.element.elt).datepicker('destroy')">]
     member this.Destroy() = ()
 
     /// Disables the datepicker functionality.
-    [<Inline "jQuery($this.element.Dom).datepicker('disable')">]
+    [<Inline "jQuery($this.element.elt).datepicker('disable')">]
     member this.Disable () = ()
 
     /// Enables the datepicker functionality.
-    [<Inline "jQuery($this.element.Dom).datepicker('enable')">]
+    [<Inline "jQuery($this.element.elt).datepicker('enable')">]
     member this.Enable () = ()
 
     /// Set a datepicker option.
-    [<Inline "jQuery($this.element.Dom).datepicker('option', $name, $value)">]
+    [<Inline "jQuery($this.element.elt).datepicker('option', $name, $value)">]
     member this.Option (name: string, value: obj) = ()
 
     /// Get a datepicker option.
-    [<Inline "jQuery($this.element.Dom).datepicker('option', $name)">]
+    [<Inline "jQuery($this.element.elt).datepicker('option', $name)">]
     member this.Option (name: string) = X<obj>
 
     /// Gets all options.
-    [<Inline "jQuery($this.element.Dom).datepicker('option','all')">]
+    [<Inline "jQuery($this.element.elt).datepicker('option','all')">]
     member this.Option () = X<DatepickerConfiguration>
 
     /// Sets one or more options.
-    [<Inline "jQuery($this.element.Dom).datepicker('option', $options)">]
+    [<Inline "jQuery($this.element.elt).datepicker('option', $options)">]
     member this.Option (options: DatepickerConfiguration) = X<unit>
 
-    [<Inline "jQuery($this.element.Dom).datepicker('widget')">]
+    [<Inline "jQuery($this.element.elt).datepicker('widget')">]
     member private this.getWidget () = X<Dom.Element>
 
     /// Returns the .ui-datepicker element.
@@ -363,72 +363,71 @@ and
     member this.Widget = this.getWidget()
 
     /// Open a datepicker in a "dialog" box.
-    [<Inline "jQuery($this.element.Dom).datepicker('dialog', $date, function(x,y){return ($onSelect(x))(y)}, $settings, $pos)">]
+    [<Inline "jQuery($this.element.elt).datepicker('dialog', $date, function(x,y){return ($onSelect(x))(y)}, $settings, $pos)">]
     member this.Dialog (date: Date, onSelect: string -> Datepicker -> unit, settings: DatepickerConfiguration, pos: int * int) = ()
 
     /// Open a datepicker in a "dialog" box.
-    [<Inline "jQuery($this.element.Dom).datepicker('dialog', $date, function(x,y){return ($onSelect(x))(y)}, $settings)">]
+    [<Inline "jQuery($this.element.elt).datepicker('dialog', $date, function(x,y){return ($onSelect(x))(y)}, $settings)">]
     member this.Dialog (date: Date, onSelect: string -> Datepicker -> unit, settings: DatepickerConfiguration) = ()
 
     /// Open a datepicker in a "dialog" box.
-    [<Inline "jQuery($this.element.Dom).datepicker('dialog', $date, function(x,y){return ($onSelect(x))(y)})">]
+    [<Inline "jQuery($this.element.elt).datepicker('dialog', $date, function(x,y){return ($onSelect(x))(y)})">]
     member this.Dialog (date: Date, onSelect: string -> Datepicker -> unit) = ()
 
     /// Open a datepicker in a "dialog" box.
-    [<Inline "jQuery($this.element.Dom).datepicker('dialog', $date)">]
+    [<Inline "jQuery($this.element.elt).datepicker('dialog', $date)">]
     member this.Dialog (date: Date) = ()
 
     /// Returns true or false wether the datepicker is disabled.
-    [<Inline "jQuery($this.element.Dom).datepicker('isDisabled')">]
+    [<Inline "jQuery($this.element.elt).datepicker('isDisabled')">]
     member this.IsDisabled () : bool = Unchecked.defaultof<_>()
 
     /// Hides the datepicker.
-    [<Inline "jQuery($this.element.Dom).datepicker('hide')">]
+    [<Inline "jQuery($this.element.elt).datepicker('hide')">]
     member this.Hide () = ()
 
     /// Shows the datepicker.
-    [<Inline "jQuery($this.element.Dom).datepicker('show')">]
+    [<Inline "jQuery($this.element.elt).datepicker('show')">]
     member this.Show () = ()
 
     /// Redraw a date picker, after having made some external modifications.
-    [<Inline "jQuery($this.element.Dom).datepicker('refresh')">]
+    [<Inline "jQuery($this.element.elt).datepicker('refresh')">]
     member this.Refresh () = ()
 
     /// Get the currently selected date of the datepicker.
-    [<Inline "jQuery($this.element.Dom).datepicker('getDate')">]
+    [<Inline "jQuery($this.element.elt).datepicker('getDate')">]
     member this.GetDate () : Date = Unchecked.defaultof<_>()
 
     /// Sets the selected date.
-    [<Inline "jQuery($this.element.Dom).datepicker('setDate', $date)">]
+    [<Inline "jQuery($this.element.elt).datepicker('setDate', $date)">]
     member this.SetDate (date:string) = ()
 
     /// Sets the selected date.
-    [<Inline "jQuery($this.element.Dom).datepicker('setDate', $date)">]
+    [<Inline "jQuery($this.element.elt).datepicker('setDate', $date)">]
     member this.SetDate (date:Date) = ()
 
 
     (****************************************************************
     * Events
     *****************************************************************)
-    [<Inline "jQuery($this.element.Dom).datepicker('option',{beforeShow: function (x,y) {($f(x))(y);}})">]
+    [<Inline "jQuery($this.element.elt).datepicker('option',{beforeShow: function (x,y) {($f(x))(y);}})">]
     member private this.onBeforeShow(f : string -> Datepicker -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).datepicker('option',{beforeShowDay: function (x,y) {$f(x);}})">]
+    [<Inline "jQuery($this.element.elt).datepicker('option',{beforeShowDay: function (x,y) {$f(x);}})">]
     member private this.onBeforeShowDay(f : Date -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).datepicker('option',{onChangeMonthYear: function (x,y,z) {(($f(x))(y))(z);}})">]
+    [<Inline "jQuery($this.element.elt).datepicker('option',{onChangeMonthYear: function (x,y,z) {(($f(x))(y))(z);}})">]
     member private this.onChangeMonthYear(f : int -> int -> Datepicker -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).datepicker('option',{onSelect: function (x,y) {($f(x))(y);}})">]
+    [<Inline "jQuery($this.element.elt).datepicker('option',{onSelect: function (x,y) {($f(x))(y);}})">]
     member private this.onSelect(f : Date -> Datepicker -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).datepicker('option',{onClose: function (x,y) {($f(x))(y);}})">]
+    [<Inline "jQuery($this.element.elt).datepicker('option',{onClose: function (x,y) {($f(x))(y);}})">]
     member private this.onClose(f : Date -> Datepicker -> unit) = ()
 
     [<JavaScript>]
     member this.OnBeforeShow(f: Date -> Datepicker -> unit) : unit =
-        this
-        |> OnAfterRender(fun _ ->
+        this.element.OnAfterRender(fun _ ->
             this.onBeforeShow <| fun _ d ->
                 f (DatepickerInternal.getDate this.element.Dom) d
         )
@@ -436,20 +435,17 @@ and
 
     [<JavaScript>]
     member this.OnBeforeShowDay(f: Date -> unit) : unit =
-        this
-        |> OnAfterRender(fun _ -> this.onBeforeShowDay f)
+        this.element.OnAfterRender(fun _ -> this.onBeforeShowDay f)
         |> ignore
 
     [<JavaScript>]
     member this.OnChangeMonthYear(f: int -> int -> Datepicker -> unit) : unit =
-        this
-        |> OnAfterRender(fun _ -> this.onChangeMonthYear f)
+        this.element.OnAfterRender(fun _ -> this.onChangeMonthYear f)
         |> ignore
 
     [<JavaScript>]
     member this.OnClose(f: Date -> Datepicker -> unit) : unit =
-        this
-        |> OnAfterRender(fun _ ->
+        this.element.OnAfterRender(fun _ ->
             this.onClose <| fun _ d ->
                 f (DatepickerInternal.getDate this.element.Dom) d
         )
@@ -463,8 +459,7 @@ and
     ///   the Pagelet has been rendered.
     [<JavaScript>]
     member this.OnSelect(f: Date -> Datepicker -> unit) : unit =
-        this
-        |> OnAfterRender(fun _ ->
+        this.element.OnAfterRender(fun _ ->
             this.onSelect <| fun _ d ->
                 f (DatepickerInternal.getDate this.element.Dom) d
         )

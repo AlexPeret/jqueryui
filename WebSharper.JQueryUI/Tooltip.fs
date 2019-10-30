@@ -23,7 +23,8 @@ namespace WebSharper.JQueryUI
 
 open WebSharper
 open WebSharper.JavaScript
-open WebSharper.Html.Client
+open WebSharper.UI
+open WebSharper.UI.Html
 
 type TooltipConfiguration[<JavaScript>] () =
 
@@ -88,10 +89,10 @@ type Tooltip[<JavaScript>] internal () =
     static member New (conf: TooltipConfiguration): Tooltip =
         let s = new Tooltip()
         s.element <-
-            Div []
-            |>! OnAfterRender (fun el  ->
-                TooltipInternal.Init(el.Dom, conf)
-            )
+            (div [] [] :?> Elt)
+                .OnAfterRender (fun el  ->
+                    TooltipInternal.Init(el, conf)
+                )
         s
 
     /// Creates a new tooltip using the default configuration
@@ -105,26 +106,26 @@ type Tooltip[<JavaScript>] internal () =
     * Methods
     *****************************************************************)
     /// Removes the tooltip functionality completly.
-    [<Inline "jQuery($this.element.Dom).tooltip('destroy')">]
+    [<Inline "jQuery($this.element.elt).tooltip('destroy')">]
     member this.Destroy() = ()
 
     /// Disables the tooltip functionality.
-    [<Inline "jQuery($this.element.Dom).tooltip('disable')">]
+    [<Inline "jQuery($this.element.elt).tooltip('disable')">]
     member this.Disable () = ()
 
     /// Enables the tooltip functionality.
-    [<Inline "jQuery($this.element.Dom).tooltip('enable')">]
+    [<Inline "jQuery($this.element.elt).tooltip('enable')">]
     member this.Enable () = ()
 
     /// Sets a tooltip option.
-    [<Inline "jQuery($this.element.Dom).tooltip('option', $name, $value)">]
+    [<Inline "jQuery($this.element.elt).tooltip('option', $name, $value)">]
     member this.Option (name: string, value: obj) = ()
 
     /// Gets a tooltip option.
-    [<Inline "jQuery($this.element.Dom).tooltip('option', $name)">]
+    [<Inline "jQuery($this.element.elt).tooltip('option', $name)">]
     member this.Option (name: string) = X<obj>
 
-    [<Inline "jQuery($this.element.Dom).tooltip('widget')">]
+    [<Inline "jQuery($this.element.elt).tooltip('widget')">]
     member private this.getWidget () = X<Dom.Element>
 
     /// Returns the .ui-tooltip element.
@@ -132,26 +133,26 @@ type Tooltip[<JavaScript>] internal () =
     member this.Widget = this.getWidget()
 
     /// Closes the tooltip.
-    [<Inline "jQuery($this.element.Dom).tooltip('close')">]
+    [<Inline "jQuery($this.element.elt).tooltip('close')">]
     member this.Close () = ()
 
     /// Opens the tooltip.
-    [<Inline "jQuery($this.element.Dom).tooltip('open')">]
+    [<Inline "jQuery($this.element.elt).tooltip('open')">]
     member this.Open () = ()
 
     (****************************************************************
     * Events
     *****************************************************************)
 
-    [<Inline "jQuery($this.element.Dom).bind('tooltipcreate', function (x,y) {$f(x);})">]
+    [<Inline "jQuery($this.element.elt).bind('tooltipcreate', function (x,y) {$f(x);})">]
     member private this.onCreate(f : JQuery.Event -> unit) = ()
 
 
-    [<Inline "jQuery($this.element.Dom).bind('tooltipclose', function (x,y) {$f(x);})">]
+    [<Inline "jQuery($this.element.elt).bind('tooltipclose', function (x,y) {$f(x);})">]
     member private this.onClose(f : JQuery.Event -> unit) = ()
 
 
-    [<Inline "jQuery($this.element.Dom).bind('tooltipopen', function (x,y) {$f(x);})">]
+    [<Inline "jQuery($this.element.elt).bind('tooltipopen', function (x,y) {$f(x);})">]
     member private this.onOpen(f : JQuery.Event -> unit) = ()
 
 
@@ -159,12 +160,12 @@ type Tooltip[<JavaScript>] internal () =
     /// Event triggered when the tooltip is closed, triggered on focusout or mouseleave.
     [<JavaScript>]
     member this.OnClose(f : JQuery.Event -> unit) =
-        this |> OnAfterRender (fun _ -> this.onClose f)
+        this.element.OnAfterRender (fun _ -> this.onClose f) |> ignore
 
     /// Event triggered when the tooltip is opened.
     [<JavaScript>]
     member this.OnOpen(f : JQuery.Event -> unit) =
-        this |> OnAfterRender (fun _ -> this.onOpen f)
+        this.element.OnAfterRender (fun _ -> this.onOpen f) |> ignore
 
 
 

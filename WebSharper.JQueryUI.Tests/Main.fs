@@ -27,74 +27,86 @@ open WebSharper
 module internal Client =
 
     open WebSharper.JavaScript
-    open WebSharper.Html.Client
+    open WebSharper.UI
+    open WebSharper.UI.Html
+    open WebSharper.UI.Client
     open WebSharper.JQuery
     open WebSharper.JQueryUI
 
     let private Log (x: string) = Console.Log(x)
 
+    (*TODO:
+        - datepicker:
+          - implement multi-calendars sample
+    *)
+
     let TestAccordion () =
         let els1 =
             [
-                "Foo", Div [Tags.Button [Text "click"]]
-                "Bar", Div [Text "Second content"]
-                "Baz", Div [Text "Third content"]
+                "Foo", div [] [button [] [text "click"]]
+                "Bar", div [] [text "Second content"]
+                "Baz", div [] [text "Third content"]
             ]
-        let acc1 = Accordion.New(els1)
+        let options1 = new AccordionConfiguration(Collapsible = true)
+        let acc1 = Accordion.New(els1, options1)
         // Events
-        acc1
-        |> OnBeforeRender (fun _ ->
-            Log "Acc1 - Before Render"
-        )
-        acc1
-        |> OnAfterRender (fun _ ->
+        //acc1
+        //|> OnBeforeRender (fun _ ->
+        //    Log "Acc1 - Before Render"
+        //)
+        acc1.element.OnAfterRender (fun _ ->
             Log "Acc1 - After Render"
-        )
+        ) |> ignore
         acc1.OnActivate (fun _ _ ->
             Log "Acc1 - Activate"
-        )
+        ) |> ignore
+
         let els2 =
             [
-                "Foo", Div [acc1]
-                "Bar", Div [Text "Second content"]
-                "Baz", Div [Text "Third content"]
+                "Foo", div [] [acc1.AsDoc()]
+                "Bar", div [] [text "Second content"]
+                "Baz", div [] [text "Third content"]
             ]
-        let acc2 = Accordion.New(els2)
+        let options2 = new AccordionConfiguration(Collapsible = true)
+        let acc2 = Accordion.New(els2, options2)
 
         // Events
         acc2.OnActivate (fun _ _ ->
             Log "Acc2 - Activate"
-        )
-        let button = JQueryUI.Button.New("Click")
-        button.OnClick (fun _ ->
+        ) |> ignore
+        let btn1 = JQueryUI.Button.New("Click")
+        btn1.OnClick (fun _ ->
+            Console.Log "btn1.OnClick"
             acc2.Activate(2)
             acc1.Disable()
         )
-        let button = JQueryUI.Button.New "Click"
-        button.OnClick (fun _ ->
+        let btn2 = JQueryUI.Button.New "Click"
+        btn2.OnClick (fun _ ->
+            Console.Log "btn2.OnClick"
             acc2.Activate 1
         )
-        Div [acc2] -< [button]
+        div [] [acc2.element; btn1.element; btn2.element]
 
     let RunAutocompleter conf =
-        let a = Autocomplete.New(Input [], conf)
-        a |> OnBeforeRender (fun _ -> Log "Before Render")
-        a |> OnAfterRender ( fun _ -> Log "After Render")
-        a.OnChange (fun _ _ -> Log "Change")
-        a.OnClose <| fun _ -> Log "Close"
-        a.OnSearch <| fun _ -> Log "Search"
-        a.OnFocus <| fun _ _ -> Log "Focus"
+        let ac = Autocomplete.New(input [] [], conf)
+        //ac.element.OnBeforeRender (fun _ -> Log "Before Render")
+        ac.element.OnAfterRender ( fun _ -> Log "After Render") |> ignore
+        ac.OnChange (fun _ _ -> Log "Change")
+        ac.OnClose <| fun _ -> Log "Close"
+        ac.OnSearch <| fun _ -> Log "Search"
+        ac.OnFocus <| fun _ _ -> Log "Focus"
 
         let bClose = JQueryUI.Button.New "Close"
-        bClose.OnClick (fun _ -> a.Close())
+        bClose.OnClick (fun _ -> ac.Close())
 
         let bDestroy = JQueryUI.Button.New "Destroy"
-        bClose.OnClick (fun _ -> a.Destroy())
+        bClose.OnClick (fun _ -> ac.Destroy())
 
-        Div [a] -< [
-            bClose
-            bDestroy
-        ]
+        div []
+            [ ac.element
+              bClose.element
+              bDestroy.element
+            ]
 
     let TestAutocomplete1 () =
         let conf = new AutocompleteConfiguration()
@@ -119,8 +131,8 @@ module internal Client =
 
     let TestButton () =
         let b1 = JQueryUI.Button.New ("Click")
-        b1 |> OnAfterRender(fun _ -> Log "After Render")
-        b1 |> OnBeforeRender(fun _ -> Log "Before Render")
+        b1.element.OnAfterRender(fun _ -> Log "After Render") |> ignore
+        //b1 |> OnBeforeRender(fun _ -> Log "Before Render")
         b1.OnClick(fun ev -> Log "Click")
         let b2 = JQueryUI.Button.New "Click 2"
         b2.OnClick(fun ev ->
@@ -130,18 +142,18 @@ module internal Client =
             else
                 b1.Enable()
         )
-        Div [b1; b2]
+        div [] [b1.element; b2.element]
 
     let TestDatepicker1 () =
         let conf = new DatepickerConfiguration()
-        let dp = Datepicker.New(Input [], conf)
-        dp |> OnAfterRender(fun _ -> Log "Dp After Render")
-        dp |> OnBeforeRender(fun _ -> Log "Dp Before Render")
-        Div [dp]
+        let dp = Datepicker.New(input [] [], conf)
+        dp.element.OnAfterRender(fun _ -> Log "Dp After Render") |> ignore
+        //dp |> OnBeforeRender(fun _ -> Log "Dp Before Render")
+        div [] [dp.element]
 
     let TestDatepicker2 () =
         let conf = new DatepickerConfiguration(AutoSize = true)
-        let dp = Datepicker.New(Input [],conf)
+        let dp = Datepicker.New(input [] [],conf)
 
         dp.OnClose(fun dt elem ->
             Log "Dp2 OnClose"
@@ -154,18 +166,18 @@ module internal Client =
             Console.Log elem
         )
 
-        dp
-        |> OnAfterRender (fun picker ->
-            picker.Option("changeYear", true)
-        )
-        dp |> OnAfterRender(fun picker -> 
+        dp.element.OnAfterRender (fun elem ->
+            dp.Option("changeYear", true)
+        ) |> ignore
+
+        dp.element.OnAfterRender(fun elem -> 
             Log "Dp2 After Render"
-            Log (picker.Option("changeYear").ToString())
-            Log (picker.Option("autoSize").ToString())
-            Console.Log <| picker.Option()
-        )
-        dp |> OnBeforeRender(fun _ -> Log "Dp2 Before Render")
-        Div [dp]
+            Log (dp.Option("changeYear").ToString())
+            Log (dp.Option("autoSize").ToString())
+            Console.Log <| dp.Option()
+        ) |> ignore
+        //dp |> OnBeforeRender(fun _ -> Log "Dp2 Before Render")
+        div [] [dp.element]
 
     let TestDatepicker3 () =
         let conf = 
@@ -180,43 +192,41 @@ module internal Client =
                         Log "Dp3 OnSelect"
                         Console.Log dt)
             )
-        let dp = Datepicker.New(Input [],conf)
+        let dp = Datepicker.New(input [] [],conf)
 
-        dp
-        |> OnAfterRender (fun picker ->
-            picker.Option("changeYear", true)
-        )
-        dp |> OnAfterRender(fun picker -> 
+        dp.element.OnAfterRender (fun elem ->
+            dp.Option("changeYear", true)
+        ) |> ignore
+
+        dp.element.OnAfterRender(fun elem -> 
             Log "Dp3 After Render"
-            Log (picker.Option("changeYear").ToString())
-            Log (picker.Option("autoSize").ToString())
-            Console.Log <| picker.Option()
-        )
-        dp |> OnBeforeRender(fun _ -> Log "Dp3 Before Render")
-        Div [dp]
+            Log (dp.Option("changeYear").ToString())
+            Log (dp.Option("autoSize").ToString())
+            Console.Log <| dp.Option()
+        ) |> ignore
+        //dp |> OnBeforeRender(fun _ -> Log "Dp3 Before Render")
+        div [] [dp.element]
 
 
     let TestDraggable () =
         let d =
             Draggable.New(
-                Div [
-                    Style "width:200px;background:lightgray;text-align:center"
-                    Text "Drag me!"
-                ],
+                div [attr.style "width:200px;background:lightgray;text-align:center"]
+                    [ text "Drag me!" ],
                 DraggableConfiguration(Axis = "x"))
-        Div [d]
+        div [] [d.element]
 
 
     let TestDialog () =
         let conf = DialogConfiguration()
         conf.Buttons <- [|DialogButton(Text = "Ok", Click = fun d e -> d.Close())|]
         conf.AutoOpen <- false
-        let d = Dialog.New(Div [Text "Dialog"], conf)
+        let d = Dialog.New(div [] [text "Dialog"], conf)
         d.OnClose(fun ev ->
             Log "close"
         )
-        d |> OnAfterRender(fun _ -> Log "dialog: before render")
-        d |> OnAfterRender(fun _ -> Log "dialog: after render")
+        d.element.OnAfterRender(fun _ -> Log "dialog: before render") |> ignore
+        d.element.OnAfterRender(fun _ -> Log "dialog: after render") |> ignore
         d.OnOpen(fun ev -> Log "dialog: open")
         d.OnClose(fun ev -> Log "dialog: close")
         d.OnResize(fun ev -> Log "dialog: resize")
@@ -230,39 +240,40 @@ module internal Client =
         bO.OnClick (fun ev -> d.Open())
         let bC = JQueryUI.Button.New "Close"
         bC.OnClick (fun ev -> d.Close())
-        Div [d] -< [
-            bO
-            bC
+        div [] 
+            [d.element
+             bO.element
+             bC.element
         ]
 
     let TestProgressbar () =
         let conf = ProgressbarConfiguration()
-        let p = Progressbar.New(Div [], conf)
-        p |> OnAfterRender(fun _  ->
-            p.Value <- 30
-        )
+        let pb = Progressbar.New(div [] [], conf)
+        pb.element.OnAfterRender(fun _  ->
+            pb.Value <- 30
+        ) |> ignore
 
-        let b = JQueryUI.Button.New("inc")
-        b.OnClick (fun ev ->
-            p.Value <- p.Value + 10
+        let btn = JQueryUI.Button.New("inc")
+        btn.OnClick (fun ev ->
+            pb.Value <- pb.Value + 10
         )
-        Div [p :> Pagelet ; b :> _]
+        div [] [pb.element; btn.element]
 
 
     let TestSlider () =
-        let s = Slider.New()
-        s |> OnBeforeRender(fun _ -> Log "slider: before render")
-        s |> OnAfterRender(fun _  ->
+        let slider = Slider.New()
+        //s |> OnBeforeRender(fun _ -> Log "slider: before render")
+        slider.element.OnAfterRender(fun _  ->
             Log "slider: after render"
-        )
-        s.OnChange(fun ev ->
+        ) |> ignore
+        slider.OnChange(fun ev ->
             Log "change"
         )
-        let b = JQueryUI.Button.New("check")
-        let pan = Div [s :> Pagelet ; b :> _]
-        b.OnClick (fun ev ->
-            let d = Dialog.New(Div [Text <| string s.Value])
-            pan.Append(d)
+        let btn = JQueryUI.Button.New("check")
+        let pan = div [] [slider.element; btn.element]
+        btn.OnClick (fun ev ->
+            let dialog = Dialog.New(div [] [text <| string slider.Value])
+            (pan :?> Elt).AppendChild(dialog.element)
         )
         pan
 
@@ -270,59 +281,59 @@ module internal Client =
         let conf = new TabsConfiguration()
         let tabs =
             [
-                "Tab 1",  Div [H1 [Text "Tab 1"]]
-                "Tab 2",  Div [H1 [Text "Tab 2"]]
-                "Tab 3" , Div [Text "R"]
+                "Tab 1",  div [] [h1 [] [text "Tab 1"]]
+                "Tab 2",  div [] [h1 [] [text "Tab 2"]]
+                "Tab 3" , div [] [text "R"]
             ]
-        let t = Tabs.New(tabs, conf)
-        t |> OnAfterRender(fun _ ->  Log "Aa" )
+        let tab = Tabs.New(tabs, conf)
+        tab.element.OnAfterRender(fun _ ->  Log "Aa" ) |> ignore
 
-
-
-        let b = JQueryUI.Button.New("inc")
-        b.OnClick (fun ev ->
-            JQuery.Of(t.TabContainer.Body).Children().Eq(2).Click().Ignore
-            t.Add( Div [H1 [Text "New tab"]], "Tab" + (string (t.Length + 1)))
+        let btn = JQueryUI.Button.New("inc")
+        btn.OnClick (fun ev ->
+            JQuery.Of(tab.TabContainer).Children().Eq(2).Click().Ignore
+            tab.Add(div [] [h1 [] [text "New tab"]], "Tab" + (string (tab.Length + 1)))
         )
-        Div [t :> Pagelet ; b :> _]
+        div [] [tab.element; btn.element]
 
     let TestSortable () =
         let elem =
             List.init 6 (fun i ->
-                Src ("http://www.look4design.co.uk/l4design/companies/designercurtains/image" + string (i+1) + ".jpg"))
-            |> List.map (fun e -> LI [Img [e]])
-            |> (-<) (UL [Style "list-style: none"])
+                attr.src ("http://www.look4design.co.uk/l4design/companies/designercurtains/image" + string (i+1) + ".jpg"))
+            |> List.map (fun e -> li [] [img [e] []])
+            |> ul [attr.style "list-style: none"]
         let sortable = Sortable.New elem
-        Div [sortable]
+        div [] [sortable.element]
 
     let TestWidget t w =
-        Div [
-            Style "border:solid 1px gray; padding:10px; margin-top: 10px"
-            H1 [Text t ] :> _
-            w
-        ]
+        div [attr.style "border:solid 1px gray; padding:10px; margin-top: 10px"]
+            [ h1 [] [text t ]
+              w
+            ]
+
     [<Inline "jQuery(document)">]
-    let Document () : Element = Unchecked.defaultof<_>()
+    let Document () : Dom.Element = Unchecked.defaultof<_>()
 
     let TestPosition() =
         let position1Body =
-            Div [Style "width:50px; height:50px; background-color:#F00;"]
+            div [attr.style "width:50px; height:50px; background-color:#F00;"] []
         let targetBody =
-            Div [Style "width:240px; height:200px; background-color:#999; margin:30px auto;"; Text "hej"]
-            |>! OnAfterRender (fun el ->
+            div [attr.style "width:240px; height:200px; background-color:#999; margin:30px auto;"] [text "hej"]
+        (targetBody :?> Elt)
+            .OnAfterRender (fun el ->
                 let conf1 = new PositionConfiguration()
                 conf1.My <- "center"
                 conf1.At <- "center"
-                conf1.Of <- JQueryUI.Target.Element el.Dom
+                conf1.Of <- JQueryUI.Target.Element el
                 conf1.Collision <- "fit"
                 conf1.offset <- "10 -10"
                 let p1 = Position.New(position1Body, conf1)
                 ()
-            )
-        Div [
-            position1Body
-            targetBody
-        ]
+            ) |> ignore
+
+        div []
+            [ position1Body
+              targetBody
+            ]
 
 //        let position2Body =
 //            Div [Style "width:50px; height:50px; background-color:#0F0;"]
@@ -370,7 +381,7 @@ module internal Client =
 //            -< [p1; p2; p3; p4 ]
 
     let TestResizable () =
-        let img = Div [Style "background:url(http://www.look4design.co.uk/l4design/companies/light-iq/image14.jpg);height:100px;width:100px" ]
+        let img = div [attr.style "background:url(http://www.look4design.co.uk/l4design/companies/light-iq/image14.jpg);height:100px;width:100px" ] []
         let resizable = Resizable.New img
         resizable.OnStart  (fun _ _ -> Log("Started!"))
         resizable.OnResize (fun event ui ->
@@ -380,8 +391,8 @@ module internal Client =
                 ui.Size.Height <- 200
             Log("Resized!"))
         resizable.OnStop   (fun _ _ -> Log("Stopped!"))
-        let drag = Draggable.New (Div [resizable])
-        Div [drag]
+        let drag = Draggable.New (div [] [resizable.element])
+        div [] [drag.element]
 
 
     let Tests () =
@@ -405,7 +416,7 @@ module internal Client =
                 "Resizable",  TestResizable ()
             ]
             |> Tabs.New
-        Div [tab]
+        div [] [tab.element]
 
 open WebSharper.Sitelets
 
@@ -413,23 +424,18 @@ type Action = | Index
 
 module Site =
 
-    [<Sealed>]
-    type TestControl() =
-        inherit Web.Control()
-
-        [<JavaScript>]
-        override this.Body =
-            Client.Tests() :> _
-
-    open WebSharper.Html.Server
+    open WebSharper.UI.Html
 
     let HomePage ctx =
         Content.Page(
             Title = "WebSharper JQueryUI Tests",
-            Body = [Div [new TestControl()]]
+            Body = [ div [] [client <@ Client.Tests() @>] ]
         )
 
-    let Main = Sitelet.Content "/" Index HomePage
+    [<Website>]
+    let Main =
+        Sitelet.Content "/" Index HomePage
+
 
 [<Sealed>]
 type Website() =

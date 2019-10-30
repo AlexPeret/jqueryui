@@ -23,7 +23,9 @@ namespace WebSharper.JQueryUI
 
 open WebSharper
 open WebSharper.JavaScript
-open WebSharper.Html.Client
+open WebSharper.UI
+open WebSharper.UI.Html
+open WebSharper.UI.Client
 
 
 type TabsAjaxOptionsConfiguration =
@@ -130,25 +132,29 @@ type Tabs[<JavaScript>] internal (tabContainer, panelContainer) =
     /// list of name and element pairs and configuration settings object.
     [<JavaScript>]
     [<Name "New1">]
-    static member New (els : List<string * Element>, conf: TabsConfiguration): Tabs =
+    static member New (els : List<string * Doc>, conf: TabsConfiguration): Tabs =
         let panelContainer, tabContainer =
             let itemPanels =
                 els
                 |> List.map (fun (label, panel) ->
-                   let id = NewId()
-                   let item = LI [A [HRef ("#" + id); Text label]]
-                   let tab = Div [Id id] -< [panel]
-                   (item :> Pagelet, tab :> Pagelet)
+                   let id = Utils.NewId()
+                   let item = li [] [a [attr.href ("#" + id)] [text label]]
+                   let tab = div [attr.id id] [panel]
+                   //(item :?> Utils.Pagelet, tab :?> Utils.Pagelet)
+                   (item, tab)
                 )
-            let tabs = UL (Seq.map fst itemPanels)
-            Div (tabs :> Pagelet :: List.map snd itemPanels), tabs
+            let tabs = ul [] (Seq.map fst itemPanels)
+            let tabs' = 
+                //(tabs :?> Utils.Pagelet :: List.map snd itemPanels)
+                (tabs :: List.map snd itemPanels)
+            div [] tabs', tabs
 
         let tabs = new Tabs (tabContainer, panelContainer)
         tabs.element <-
-            panelContainer
-            |>! OnAfterRender (fun el ->
-                TabsInternal.Init(el.Dom, conf)
-            )
+            (panelContainer :?> Elt)
+                .OnAfterRender (fun el ->
+                    TabsInternal.Init(el, conf)
+                )
         tabs
 
 
@@ -156,7 +162,7 @@ type Tabs[<JavaScript>] internal (tabContainer, panelContainer) =
     /// Creates a new tabs object using the default configuration.
     [<JavaScript>]
     [<Name "New2">]
-    static member New (els : List<string * Element>): Tabs =
+    static member New (els : List<string * Doc>): Tabs =
         Tabs.New(els, new TabsConfiguration())
 
 
@@ -164,26 +170,26 @@ type Tabs[<JavaScript>] internal (tabContainer, panelContainer) =
     * Methods
     *****************************************************************)
     /// Removes the tabs functionality completely.
-    [<Inline "jQuery($this.element.Dom).tabs('destroy')">]
+    [<Inline "jQuery($this.element.elt).tabs('destroy')">]
     member this.Destroy() = ()
 
     /// Disables the tabs functionality.
-    [<Inline "jQuery($this.element.Dom).tabs('disable')">]
+    [<Inline "jQuery($this.element.elt).tabs('disable')">]
     member this.Disable () = ()
 
     /// Enables the tabs functionality.
-    [<Inline "jQuery($this.element.Dom).tabs('enable')">]
+    [<Inline "jQuery($this.element.elt).tabs('enable')">]
     member this.Enable () = ()
 
     /// Sets a tabs option.
-    [<Inline "jQuery($this.element.Dom).tabs('option', $name, $value)">]
+    [<Inline "jQuery($this.element.elt).tabs('option', $name, $value)">]
     member this.Option (name: string, value: obj) = ()
 
     /// Gets a tabs option.
-    [<Inline "jQuery($this.element.Dom).tabs('option', $name)">]
+    [<Inline "jQuery($this.element.elt).tabs('option', $name)">]
     member this.Option (name: string) = X<obj>
 
-    [<Inline "jQuery($this.element.Dom).tabs('widget')">]
+    [<Inline "jQuery($this.element.elt).tabs('widget')">]
     member private this.getWidget () = X<Dom.Element>
 
     /// Returns the .ui-tabs element.
@@ -191,45 +197,45 @@ type Tabs[<JavaScript>] internal (tabContainer, panelContainer) =
     member this.Widget = this.getWidget()
 
     /// Reloads the content of an Ajax tab.
-    [<Inline "jQuery($this.element.Dom).tabs('load', $index)">]
+    [<Inline "jQuery($this.element.elt).tabs('load', $index)">]
     member this.Load (index: int) = ()
 
     /// Process any tabs that were added or removed directly in the DOM and recompute the height of the tab panels. Results depend on the content and the heightStyle option.
-    [<Inline "jQuery($this.element.Dom).tabs('refresh')">]
+    [<Inline "jQuery($this.element.elt).tabs('refresh')">]
     member this.Refresh () = ()
 
     /// Retrieve the number of tabs of the first matched tab pane.
     [<JavaScript>]
-    member this.Length = JQuery.JQuery.Of(tabContainer.Dom).Children().Length
+    member this.Length = JQuery.JQuery.Of(tabContainer).Children().Length
 
     /// Add a new tab with the given element and label
     /// inserted at the specified index.
     [<JavaScript>]
-    member this.Add(el: Element, label: string, ix: int) =
-        let id = NewId()
-        let tab = LI [A [HRef ("#" + id); Text label]]
-        let panel = Div [Id id] -< [el]
-        JQuery.JQuery.Of(tabContainer.Dom).Children().Eq(ix).Before(tab.Dom).Ignore
-        JQuery.JQuery.Of(panelContainer.Dom).Children().Eq(ix).After(panel.Dom).Ignore // after because the first child is the tabset
-        tab.Render()
-        panel.Render()
+    member this.Add(el: Doc, label: string, ix: int) =
+        let id = Utils.NewId()
+        let tab = li [] [a [attr.href ("#" + id)] [text label]]
+        let panel = div [attr.id id] [el]
+        JQuery.JQuery.Of(tabContainer).Children().Eq(ix).Before((tab :?> Elt).GetDom()).Ignore
+        JQuery.JQuery.Of(panelContainer).Children().Eq(ix).After((panel :?> Elt).GetDom()).Ignore // after because the first child is the tabset
+        //tab.Render()
+        //panel.Render()
         this.Refresh()
 
     /// Add a new tab with the given element and label.
     [<JavaScript>]
-    member this.Add(el: Element, label: string) =
-        let id = NewId()
-        let tab = LI [A [HRef ("#" + id); Text label]]
-        let panel = Div [Id id] -< [el]
-        tabContainer.Append(tab)
-        panelContainer.Append(panel)
+    member this.Add(el: Doc, label: string) =
+        let id = Utils.NewId()
+        let tab = li [] [a [attr.href ("#" + id)] [text label]]
+        let panel = div [attr.id id] [el]
+        (tabContainer :?> Elt).AppendChild(tab)
+        (panelContainer :?> Elt).AppendChild(panel)
         this.Refresh()
 
     /// Remove the tab at the specified index.
     [<JavaScript>]
     member this.Remove(ix: int) =
-        JQuery.JQuery.Of(tabContainer.Dom).Children().Eq(ix).Remove().Ignore
-        JQuery.JQuery.Of(panelContainer.Dom).Children().Eq(ix).Remove().Ignore
+        JQuery.JQuery.Of(tabContainer).Children().Eq(ix).Remove().Ignore
+        JQuery.JQuery.Of(panelContainer).Children().Eq(ix).Remove().Ignore
         this.Refresh()
 
     (****************************************************************
@@ -242,53 +248,59 @@ type Tabs[<JavaScript>] internal (tabContainer, panelContainer) =
     (****************************************************************
     * Events
     *****************************************************************)
-    [<Inline "jQuery($this.element.Dom).bind('tabscreate', function (x,y) {($f(x))(y);})">]
+    [<Inline "jQuery($this.element.elt).bind('tabscreate', function (x,y) {($f(x))(y);})">]
     member private this.onCreate(f : JQuery.Event -> TabsInfo -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).bind('tabsload', function (x,y) {($f(x))(y);})">]
+    [<Inline "jQuery($this.element.elt).bind('tabsload', function (x,y) {($f(x))(y);})">]
     member private this.onLoad(f : JQuery.Event -> TabsInfo -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).bind('tabsbeforeload', function (x,y) {($f(x))(y);})">]
+    [<Inline "jQuery($this.element.elt).bind('tabsbeforeload', function (x,y) {($f(x))(y);})">]
     member private this.onBeforeLoad(f : JQuery.Event -> TabsInfo -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).bind('tabsactivate', function (x,y) {($f(x))(y);})">]
+    [<Inline "jQuery($this.element.elt).bind('tabsactivate', function (x,y) {($f(x))(y);})">]
     member private this.onActivate(f : JQuery.Event -> TabsActivateEvent -> unit) = ()
 
-    [<Inline "jQuery($this.element.Dom).bind('tabsbeforeactivate', function (x,y) {($f(x))(y);})">]
+    [<Inline "jQuery($this.element.elt).bind('tabsbeforeactivate', function (x,y) {($f(x))(y);})">]
     member private this.onBeforeActivate(f : JQuery.Event -> TabsActivateEvent -> unit) = ()
 
 
     /// Event triggered when the tabs are created.
     [<JavaScript>]
     member this.OnCreate f =
-        this |> OnAfterRender(fun _ ->
+        this.element.OnAfterRender(fun _ ->
             this.onCreate f
         )
+        |> ignore
 
     /// Event triggered when a tab is loaded.
     [<JavaScript>]
     member this.OnLoad f =
-        this |> OnAfterRender(fun _ ->
+        this.element.OnAfterRender(fun _ ->
             this.onLoad f
         )
+        |> ignore
 
     /// Event triggered before a tab is loaded.
     [<JavaScript>]
     member this.OnBeforeLoad f =
-        this |> OnAfterRender(fun _  ->
+        this.element.OnAfterRender(fun _  ->
             this.onBeforeLoad f
         )
+        |> ignore
 
     /// Event triggered when a tab is activated.
     [<JavaScript>]
     member this.OnActivate f =
-        this |> OnAfterRender(fun _  ->
+        this.element.OnAfterRender(fun _  ->
             this.onActivate f
         )
+        |> ignore
 
     /// Event triggered when a tab is beforeActivated.
     [<JavaScript>]
     member this.OnBeforeActivate f =
-        this |> OnAfterRender(fun _  ->
+        this.element.OnAfterRender(fun _  ->
             this.onBeforeActivate f
         )
+        |> ignore
+
